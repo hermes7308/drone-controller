@@ -1,4 +1,4 @@
-package com.example.park.droncontroller;
+package com.example.park.dronecontroller;
 
 import org.junit.Test;
 

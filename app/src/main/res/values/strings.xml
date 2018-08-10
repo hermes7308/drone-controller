@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">DronController</string>
+    <string name="app_name">드론 조종기</string>
+    <string name="string_enable_bluetooth">블루투스 활성화</string>
+    <string name="string_disable_bluetooth">블루투스 비활성화</string>
+    <string name="string_find_bluetooth">블루투스 찾기</string>
+    <string name="string_run_bluetooth_server">블루투스 서버 실행</string>
+    <string name="string_cancel">Cancel</string>
+    <string name="string_permission_failure">권한 요청 실패</string>
 </resources>

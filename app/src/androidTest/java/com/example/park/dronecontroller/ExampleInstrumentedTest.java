@@ -1,4 +1,4 @@
-package com.example.park.droncontroller;
+package com.example.park.dronecontroller;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
