@@ -27,13 +27,14 @@
                 android:transcriptMode="alwaysScroll" />
 
             <ImageButton
-                android:id="@+id/imageButton2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:id="@+id/remove_button"
+                android:layout_width="53dp"
+                android:layout_height="49dp"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
-                app:srcCompat="@android:drawable/ic_menu_delete" />
+                android:background="@android:color/transparent"
+                app:srcCompat="@mipmap/trash" />
         </RelativeLayout>
 
     </ScrollView>

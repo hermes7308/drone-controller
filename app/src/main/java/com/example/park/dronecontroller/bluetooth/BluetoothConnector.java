@@ -63,8 +63,11 @@ public class BluetoothConnector extends Thread {
             }
             return;
         }
+        // 블루투스 검색 다이얼로그 종료
+        activity.cancelSearchBluetoothDialog();
 
-        showToast("블루투스를 연결하였습니다.");
+        handler.obtainMessage(MainActivityEvent.CANCEL_BLUETOOTH_DIALOG.getStatus(), "블루투스를 연결하였습니다.")
+                .sendToTarget();
         // Do work to manage the connection (in a separate thread)
         manageConnectedSocket(mmSocket);
     }

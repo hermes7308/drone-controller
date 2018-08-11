@@ -31,6 +31,12 @@ public enum MainActivityEvent {
             Toast.makeText(context, message, Toast.LENGTH_LONG).show();
         }
     },
+    CANCEL_BLUETOOTH_DIALOG(2) {
+        @Override
+        public void execute(MainActivity activity, Context context, Message msg) {
+            activity.cancelSearchBluetoothDialog();
+        }
+    },
     SEND(300) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {

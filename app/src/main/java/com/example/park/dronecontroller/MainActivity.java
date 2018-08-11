@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int RESULT_OK = -1;
     /* 취소 값 */
     private static final int RESULT_CANCELED = 0;
+    /* 블루투스 검색 가능 기간 */
+    public static final int BLUETOOTH_DISCOVERY_TIME = 300;
 
     private Handler handler;
 
@@ -54,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView logListView;
     private ScrollView scrollView;
-
+    private AlertDialog searchBluetoothDialog;
     private BluetoothAdapter bluetoothAdapter;
 
     private BluetoothListViewAdapter bluetoothListViewAdapter;
@@ -82,6 +85,15 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 scrollView.requestDisallowInterceptTouchEvent(true);
                 return false;
+            }
+        });
+
+        /* 로그 제거 버튼 */
+        ImageButton removeButton = findViewById(R.id.remove_button);
+        removeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logArrayAdapter.clear();
             }
         });
 
@@ -164,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_ENABLE_BT_SERVER) {
             switch (resultCode) {
-                case RESULT_OK:
+                case BLUETOOTH_DISCOVERY_TIME:
                     runServer();
                     break;
                 case RESULT_CANCELED:
@@ -247,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_run_bluetooth_server:
                 Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, BLUETOOTH_DISCOVERY_TIME);
                 startActivityForResult(discoverableIntent, REQUEST_ENABLE_BT_SERVER);
 
                 return true;
@@ -314,8 +326,8 @@ public class MainActivity extends AppCompatActivity {
             alertDialogBuilder.setView(view);
 
             // create and show the alert dialog
-            AlertDialog dialog = alertDialogBuilder.create();
-            dialog.show();
+            searchBluetoothDialog = alertDialogBuilder.create();
+            searchBluetoothDialog.show();
         }
 
         @Override
@@ -353,5 +365,9 @@ public class MainActivity extends AppCompatActivity {
 
     public Handler getHandler() {
         return handler;
+    }
+
+    public void cancelSearchBluetoothDialog() {
+        searchBluetoothDialog.cancel();
     }
 }
