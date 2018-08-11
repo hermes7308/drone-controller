@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 import com.example.park.dronecontroller.bluetooth.BluetoothAcceptor;
 import com.example.park.dronecontroller.bluetooth.BluetoothManager;
 import com.example.park.dronecontroller.handler.EventHandler;
-import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 import com.example.park.dronecontroller.model.JoystickItem;
 import com.example.park.dronecontroller.util.GsonFactory;
 import com.gun0912.tedpermission.PermissionListener;
@@ -40,20 +38,25 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = getClass().getSimpleName();
 
     /* 블루투스 활성화 값 */
-    private static final int REQUEST_ENABLE_BT = 200;
-    /* 블루투스 활성화 성공 값 */
+    private static final int REQUEST_ENABLE_BT = 1;
+    /* 블루투스 서버 활성화 값 */
+    private static final int REQUEST_ENABLE_BT_SERVER = 2;
+    /* 성공 값 */
     private static final int RESULT_OK = -1;
-    /* 블루투스 활성화 취소 값 */
+    /* 취소 값 */
     private static final int RESULT_CANCELED = 0;
 
     private Handler handler;
 
-    private JoystickView leftJoyStick;
-    private JoystickView rightJoyStick;
+    private MenuItem bluetoothStatusMenuItem;
+    private MenuItem bluetoothSearchMenuItem;
+    private MenuItem bluetoothRunServerMenuItem;
+
     private ListView logListView;
     private ScrollView scrollView;
 
     private BluetoothAdapter bluetoothAdapter;
+
     private BluetoothListViewAdapter bluetoothListViewAdapter;
     private BluetoothAcceptor bluetoothAcceptor;
     private BluetoothManager bluetoothManager;
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         /* 조이스틱 설정 */
-        leftJoyStick = findViewById(R.id.left_joystick);
+        JoystickView leftJoyStick = findViewById(R.id.left_joystick);
         leftJoyStick.setOnJoystickMoveListener(new JoystickView.OnJoystickMoveListener() {
             @Override
             public void onValueChanged(int angle, int power, int direction) {
@@ -91,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }, JoystickView.DEFAULT_LOOP_INTERVAL);
 
-        rightJoyStick = findViewById(R.id.right_joystick);
+        JoystickView rightJoyStick = findViewById(R.id.right_joystick);
         rightJoyStick.setOnJoystickMoveListener(new JoystickView.OnJoystickMoveListener() {
             @Override
             public void onValueChanged(int angle, int power, int direction) {
@@ -99,14 +102,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }, JoystickView.DEFAULT_LOOP_INTERVAL);
 
-    }
-
-    public void send(String from, int angle, int power, int direction) {
-        JoystickItem item = new JoystickItem(from, angle, power, direction);
-        String message = GsonFactory.get().toJson(item);
-
-        handler.obtainMessage(MainActivityEvent.SEND.getStatus(), message)
-                .sendToTarget();
     }
 
     @Override
@@ -117,18 +112,19 @@ public class MainActivity extends AppCompatActivity {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             // Device does not support Bluetooth
-            Log.e(TAG, "해당기기는 블루투스 기능을 지원하지 않습니다.");
+            printMessage("해당기기는 블루투스 기능을 지원하지 않습니다.");
             Toast.makeText(getApplicationContext(), "해당기기는 블루투스 기능을 지원하지 않습니다.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
 
-        /* bluetooth list view Adapter */
+        /* bluetooth_enable list view Adapter */
         bluetoothListViewAdapter = new BluetoothListViewAdapter(this);
 
         /* 사용가능한 블루투스 검색 브로드케스트 등록 */
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 
         registerReceiver(receiver, filter);
     }
@@ -154,70 +150,53 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        Log.d(TAG, "requestCode : " + requestCode + ", resultCode : " + resultCode);
-
         if (requestCode == REQUEST_ENABLE_BT) {
             switch (resultCode) {
                 case RESULT_OK:
-                    Toast.makeText(getApplicationContext(), "블루투스를 활성화 하였습니다.", Toast.LENGTH_SHORT).show();
+                    printMessage("블루투스를 활성화 하였습니다.");
                     break;
                 case RESULT_CANCELED:
-                    Toast.makeText(getApplicationContext(), "블루투스 기능이 필요합니다.", Toast.LENGTH_SHORT).show();
+                    printMessage("블루투스 기능이 필요합니다.");
                     break;
             }
+            return;
+        }
+
+        if (requestCode == REQUEST_ENABLE_BT_SERVER) {
+            switch (resultCode) {
+                case RESULT_OK:
+                    runServer();
+                    break;
+                case RESULT_CANCELED:
+                    printMessage("블루투스 서버 실행을 취소 하였습니다.");
+                    break;
+            }
+            return;
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return super.onCreateOptionsMenu(menu);
+
+    private void send(String from, int angle, int power, int direction) {
+        JoystickItem item = new JoystickItem(from, angle, power, direction);
+        String message = GsonFactory.get().toJson(item);
+
+        send(message);
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        if (bluetoothAdapter.isEnabled()) {
-            menu.getItem(0).setTitle(getString(R.string.string_disable_bluetooth));
-            menu.getItem(1).setVisible(true);
-        } else {
-            menu.getItem(0).setTitle(getString(R.string.string_enable_bluetooth));
-            menu.getItem(1).setVisible(false);
+    public void send(String message) {
+        BluetoothManager bluetoothManager = getBluetoothManager();
+        if (bluetoothManager == null) {
+            return;
         }
 
-
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_enable_bluetooth:
-                if (StringUtils.equals(item.getTitle(), getString(R.string.string_enable_bluetooth))) {
-                    bluetoothAdapter.enable();
-                } else {
-                    bluetoothAdapter.disable();
-                }
-
-                return true;
-            case R.id.menu_show_bluetooth_list:
-                doDiscovery();
-                /* 블루투스 리스트 다이어로그 */
-                showBluetoothList();
-
-                return true;
-            case R.id.menu_run_bluetooth_server:
-                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-                startActivity(discoverableIntent);
-
-                startServer();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (!bluetoothManager.isConnected()) {
+            return;
         }
+
+        bluetoothManager.write(message);
     }
 
-    private void startServer() {
+    private void runServer() {
         if (bluetoothAcceptor != null) {
             bluetoothAcceptor.cancel();
         }
@@ -226,55 +205,117 @@ public class MainActivity extends AppCompatActivity {
         bluetoothAcceptor.start();
     }
 
-    private void showBluetoothList() {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setTitle(getString(R.string.string_find_bluetooth));
-        alertDialogBuilder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                bluetoothAdapter.cancelDiscovery();
-            }
-        });
-        alertDialogBuilder.setNegativeButton(R.string.string_cancel, null);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
 
-        View view = this.getLayoutInflater().inflate(R.layout.bluetooth_listview, null);
-        ListView listView = view.findViewById(R.id.bluetooth_listview);
-        listView.setAdapter(bluetoothListViewAdapter);
-        alertDialogBuilder.setView(view);
+        /* 메뉴 */
+        bluetoothStatusMenuItem = menu.getItem(0);
+        bluetoothSearchMenuItem = menu.getItem(1);
+        bluetoothRunServerMenuItem = menu.getItem(2);
 
-        // create and show the alert dialog
-        AlertDialog dialog = alertDialogBuilder.create();
-        dialog.show();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_bluetooth_status:
+                if (bluetoothAdapter.isEnabled()) {
+                    /* 블루투스 비활성화 */
+                    bluetoothAdapter.disable();
+                } else {
+                    /* 블루투스 활성화 */
+                    bluetoothAdapter.enable();
+                }
+
+                return true;
+            case R.id.menu_search_bluetooth_list:
+                bluetoothListViewAdapter.clear();
+
+                TedPermission.with(this)
+                        .setPermissionListener(permissionListener)
+                        .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
+                        .setPermissions(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        .check();
+
+                return true;
+            case R.id.menu_run_bluetooth_server:
+                Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                startActivityForResult(discoverableIntent, REQUEST_ENABLE_BT_SERVER);
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            if (StringUtils.equals(BluetoothDevice.ACTION_FOUND, action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
                 bluetoothListViewAdapter.addBluetooth(device);
                 bluetoothListViewAdapter.notifyDataSetChanged();
+
+                return;
+            }
+
+            if (StringUtils.equals(BluetoothAdapter.ACTION_STATE_CHANGED, action)) {
+                int status = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
+
+                switch (status) {
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                    case BluetoothAdapter.STATE_OFF:
+                        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_disable);
+                        bluetoothSearchMenuItem.setVisible(false);
+                        bluetoothRunServerMenuItem.setVisible(false);
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                    case BluetoothAdapter.STATE_ON:
+                        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_enable);
+                        bluetoothSearchMenuItem.setVisible(true);
+                        bluetoothRunServerMenuItem.setVisible(true);
+                        break;
+                }
+
             }
         }
     };
-
-    private void doDiscovery() {
-        bluetoothListViewAdapter.clear();
-
-        TedPermission.with(this)
-                .setPermissionListener(permissionListener)
-                .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
-                .setPermissions(Manifest.permission.ACCESS_COARSE_LOCATION)
-                .check();
-    }
 
     private PermissionListener permissionListener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
             /* 블루투스 찾기 */
             bluetoothAdapter.startDiscovery();
+
+            /* 블루투스 리스트 다이어로그 */
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+            alertDialogBuilder.setTitle(getString(R.string.string_find_bluetooth));
+            alertDialogBuilder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    bluetoothAdapter.cancelDiscovery();
+                }
+            });
+            alertDialogBuilder.setNegativeButton(R.string.string_cancel, null);
+
+            View view = MainActivity.this.getLayoutInflater().inflate(R.layout.bluetooth_listview, null);
+            ListView listView = view.findViewById(R.id.bluetooth_listview);
+            listView.setAdapter(bluetoothListViewAdapter);
+            alertDialogBuilder.setView(view);
+
+            // create and show the alert dialog
+            AlertDialog dialog = alertDialogBuilder.create();
+            dialog.show();
         }
 
         @Override
@@ -282,6 +323,25 @@ public class MainActivity extends AppCompatActivity {
             bluetoothAdapter.cancelDiscovery();
         }
     };
+
+    public void printMessage(String message) {
+        logArrayAdapter.add(message);
+        logListView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Select the last row so it will scroll into view...
+                logListView.setSelection(logArrayAdapter.getCount() - 1);
+            }
+        });
+    }
+
+    public BluetoothAcceptor getBluetoothAcceptor() {
+        return bluetoothAcceptor;
+    }
+
+    public void setBluetoothAcceptor(BluetoothAcceptor bluetoothAcceptor) {
+        this.bluetoothAcceptor = bluetoothAcceptor;
+    }
 
     public void setBluetoothManager(BluetoothManager bluetoothManager) {
         this.bluetoothManager = bluetoothManager;
@@ -293,16 +353,5 @@ public class MainActivity extends AppCompatActivity {
 
     public Handler getHandler() {
         return handler;
-    }
-
-    public void addLog(String message) {
-        logArrayAdapter.add(message);
-        logListView.post(new Runnable() {
-            @Override
-            public void run() {
-                // Select the last row so it will scroll into view...
-                logListView.setSelection(logArrayAdapter.getCount() - 1);
-            }
-        });
     }
 }

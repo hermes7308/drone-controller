@@ -6,12 +6,17 @@ import android.os.Message;
 import android.widget.Toast;
 
 import com.example.park.dronecontroller.MainActivity;
-import com.example.park.dronecontroller.bluetooth.BluetoothManager;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public enum MainActivityEvent {
+    NONE_FOR_LOG(-1) {
+        @Override
+        public void execute(MainActivity activity, Context context, Message msg) {
+
+        }
+    },
     SHOW_SHORT_TOAST(0) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
@@ -26,38 +31,11 @@ public enum MainActivityEvent {
             Toast.makeText(context, message, Toast.LENGTH_LONG).show();
         }
     },
-    BLUETOOTH_CONNECTION_SUCCESS(200) {
-        @Override
-        public void execute(MainActivity activity, Context context, Message msg) {
-
-        }
-    },
-    BLUETOOTH_CONNECTION_FAIL(201) {
-        @Override
-        public void execute(MainActivity activity, Context context, Message msg) {
-
-        }
-    },
-    BLUETOOTH_CONNECTION_CLOSE(202) {
-        @Override
-        public void execute(MainActivity activity, Context context, Message msg) {
-
-        }
-    },
     SEND(300) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            BluetoothManager bluetoothManager = activity.getBluetoothManager();
-            if (bluetoothManager == null) {
-                return;
-            }
-
-            if (!bluetoothManager.isConnected()) {
-                return;
-            }
-
             String message = (String) msg.obj;
-            bluetoothManager.write(message);
+            activity.send(message);
         }
     };
 
