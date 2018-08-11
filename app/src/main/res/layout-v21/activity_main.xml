@@ -10,17 +10,19 @@
         android:id="@+id/log_scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:transcriptMode="alwaysScroll"
-        android:fillViewport="true">
+        android:layout_weight="1">
 
-        <ListView
-            android:id="@+id/log_listview"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:scrollbars="vertical"
-            android:transcriptMode="alwaysScroll" />
+            android:orientation="vertical">
 
+            <ListView
+                android:id="@+id/log_listview"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:scrollbars="vertical" />
+        </LinearLayout>
     </ScrollView>
 
     <RelativeLayout
@@ -33,13 +35,22 @@
             android:layout_width="200dp"
             android:layout_height="200dp" />
 
+        <Button
+            android:id="@+id/helloBt"
+            android:layout_width="207dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:text="Hello" />
+
         <com.zerokol.views.JoystickView
             android:id="@+id/right_joystick"
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true" />
+            android:layout_alignParentTop="true"
+            tools:ignore="RtlHardcoded" />
     </RelativeLayout>
 
 </LinearLayout>

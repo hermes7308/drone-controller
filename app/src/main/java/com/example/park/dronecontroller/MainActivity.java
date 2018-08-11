@@ -10,22 +10,27 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import com.example.park.dronecontroller.bluetooth.BluetoothAcceptor;
 import com.example.park.dronecontroller.bluetooth.BluetoothManager;
-import com.example.park.dronecontroller.status.EventStatus;
+import com.example.park.dronecontroller.handler.EventHandler;
+import com.example.park.dronecontroller.handler.event.MainActivityEvent;
+import com.example.park.dronecontroller.model.JoystickItem;
+import com.example.park.dronecontroller.util.GsonFactory;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
+import com.zerokol.views.JoystickView;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -41,35 +46,67 @@ public class MainActivity extends AppCompatActivity {
     /* 블루투스 활성화 취소 값 */
     private static final int RESULT_CANCELED = 0;
 
-    public static final int BLUETOOTH_HANDLE_STATUS = 1;
-    private Button button;
+    private Handler handler;
+
+    private JoystickView leftJoyStick;
+    private JoystickView rightJoyStick;
+    private ListView logListView;
+    private ScrollView scrollView;
 
     private BluetoothAdapter bluetoothAdapter;
-
     private BluetoothListViewAdapter bluetoothListViewAdapter;
-
     private BluetoothAcceptor bluetoothAcceptor;
-
     private BluetoothManager bluetoothManager;
+
+    private ArrayAdapter<String> logArrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        button = findViewById(R.id.helloBt);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (bluetoothManager != null) {
-                    bluetoothManager.write("HELLO");
-                    return;
-                }
+        /* 핸들러 생성 */
+        handler = new EventHandler(this, getApplicationContext());
 
-                Toast.makeText(getApplicationContext(), "Non BluetoothManager", Toast.LENGTH_SHORT).show();
+        /* 로그 스크롤 뷰 설정 */
+        scrollView = findViewById(R.id.log_scrollview);
+
+        logArrayAdapter = new ArrayAdapter<>(this, R.layout.log_listview_row);
+        logListView = findViewById(R.id.log_listview);
+        logListView.setAdapter(logArrayAdapter);
+        logListView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                scrollView.requestDisallowInterceptTouchEvent(true);
+                return false;
             }
         });
 
+        /* 조이스틱 설정 */
+        leftJoyStick = findViewById(R.id.left_joystick);
+        leftJoyStick.setOnJoystickMoveListener(new JoystickView.OnJoystickMoveListener() {
+            @Override
+            public void onValueChanged(int angle, int power, int direction) {
+                send("LEFT", angle, power, direction);
+            }
+        }, JoystickView.DEFAULT_LOOP_INTERVAL);
+
+        rightJoyStick = findViewById(R.id.right_joystick);
+        rightJoyStick.setOnJoystickMoveListener(new JoystickView.OnJoystickMoveListener() {
+            @Override
+            public void onValueChanged(int angle, int power, int direction) {
+                send("RIGHT", angle, power, direction);
+            }
+        }, JoystickView.DEFAULT_LOOP_INTERVAL);
+
+    }
+
+    public void send(String from, int angle, int power, int direction) {
+        JoystickItem item = new JoystickItem(from, angle, power, direction);
+        String message = GsonFactory.get().toJson(item);
+
+        handler.obtainMessage(MainActivityEvent.SEND.getStatus(), message)
+                .sendToTarget();
     }
 
     @Override
@@ -129,8 +166,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
-
-
     }
 
     @Override
@@ -175,16 +210,20 @@ public class MainActivity extends AppCompatActivity {
                 discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
                 startActivity(discoverableIntent);
 
-                if (bluetoothAcceptor != null) {
-                    bluetoothAcceptor.cancel();
-                }
-
-                bluetoothAcceptor = new BluetoothAcceptor(this);
-                bluetoothAcceptor.start();
+                startServer();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void startServer() {
+        if (bluetoothAcceptor != null) {
+            bluetoothAcceptor.cancel();
+        }
+
+        bluetoothAcceptor = new BluetoothAcceptor(this);
+        bluetoothAcceptor.start();
     }
 
     private void showBluetoothList() {
@@ -231,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
                 .check();
     }
 
-    PermissionListener permissionListener = new PermissionListener() {
+    private PermissionListener permissionListener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
             /* 블루투스 찾기 */
@@ -240,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-
+            bluetoothAdapter.cancelDiscovery();
         }
     };
 
@@ -248,17 +287,22 @@ public class MainActivity extends AppCompatActivity {
         this.bluetoothManager = bluetoothManager;
     }
 
-    private Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            if (msg.what == EventStatus.SHOW_TOAST.getStatus()) {
-                String message = (String) msg.obj;
-                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
+    public BluetoothManager getBluetoothManager() {
+        return bluetoothManager;
+    }
 
     public Handler getHandler() {
         return handler;
+    }
+
+    public void addLog(String message) {
+        logArrayAdapter.add(message);
+        logListView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Select the last row so it will scroll into view...
+                logListView.setSelection(logArrayAdapter.getCount() - 1);
+            }
+        });
     }
 }

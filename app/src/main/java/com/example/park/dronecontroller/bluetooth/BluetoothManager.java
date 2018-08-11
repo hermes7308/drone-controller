@@ -3,7 +3,7 @@ package com.example.park.dronecontroller.bluetooth;
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 
-import com.example.park.dronecontroller.status.EventStatus;
+import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,10 +47,12 @@ public class BluetoothManager extends Thread {
                 // Read from the InputStream
                 bytes = mmInStream.read(buffer);
                 String message = new String(buffer, 0, bytes);
+
                 // Send the obtained bytes to the UI activity
-                handler.obtainMessage(EventStatus.SHOW_TOAST.getStatus(), message)
+                handler.obtainMessage(MainActivityEvent.SHOW_LONG_TOAST.getStatus(), message)
                         .sendToTarget();
             } catch (IOException e) {
+                showToast("블루투스 소켓이 끊어졌습니다.");
                 break;
             }
         }
@@ -78,5 +80,10 @@ public class BluetoothManager extends Thread {
             mmSocket.close();
         } catch (IOException e) {
         }
+    }
+
+    private void showToast(String message) {
+        handler.obtainMessage(MainActivityEvent.SHOW_LONG_TOAST.getStatus(), message)
+                .sendToTarget();
     }
 }

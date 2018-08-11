@@ -83,16 +83,20 @@ public class BluetoothListViewAdapter extends BaseAdapter {
                 BluetoothDevice device = bluetoothList.get(pos);
                 Toast.makeText(activity.getApplicationContext(), device.getName() + "\n" + device.getAddress(), Toast.LENGTH_SHORT).show();
 
-                if (bluetoothConnector != null) {
-                    bluetoothConnector.cancel();
-                }
-
-                bluetoothConnector = new BluetoothConnector(activity, device);
-                bluetoothConnector.start();
+                connect(device);
             }
         });
 
         return view;
+    }
+
+    private void connect(BluetoothDevice device) {
+        if (bluetoothConnector != null) {
+            bluetoothConnector.cancel();
+        }
+
+        bluetoothConnector = new BluetoothConnector(activity, device);
+        bluetoothConnector.start();
     }
 
     private class BluetoothListViewHolder {

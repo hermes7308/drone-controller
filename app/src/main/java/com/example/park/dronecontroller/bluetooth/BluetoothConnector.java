@@ -8,7 +8,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.example.park.dronecontroller.MainActivity;
-import com.example.park.dronecontroller.status.EventStatus;
+import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -87,7 +87,7 @@ public class BluetoothConnector extends Thread {
     }
 
     private void showToast(String message) {
-        handler.obtainMessage(EventStatus.SHOW_TOAST.getStatus(), message)
+        handler.obtainMessage(MainActivityEvent.SHOW_LONG_TOAST.getStatus(), message)
                 .sendToTarget();
     }
 }
