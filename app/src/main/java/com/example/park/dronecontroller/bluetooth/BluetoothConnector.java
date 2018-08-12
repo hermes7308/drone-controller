@@ -51,7 +51,9 @@ public class BluetoothConnector extends Thread {
             mmSocket.connect();
         } catch (IOException connectException) {
             // Unable to connect; close the socket and get out
-            showToast("블루투스 연결이 종료 되었습니다.");
+            handler.obtainMessage(MainActivityEvent.CLOSE_CONNECTION.getStatus())
+                    .sendToTarget();
+
             Log.e(TAG, "블루투스 연결이 종료 되었습니다.", connectException);
             try {
                 mmSocket.close();
@@ -86,8 +88,4 @@ public class BluetoothConnector extends Thread {
                 .sendToTarget();
     }
 
-    private void showToast(String message) {
-        handler.obtainMessage(MainActivityEvent.SHOW_LONG_TOAST.getStatus(), message)
-                .sendToTarget();
-    }
 }

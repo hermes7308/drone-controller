@@ -51,7 +51,6 @@ public class BluetoothAcceptor extends Thread {
             }
             // If a connection was accepted
             if (socket != null) {
-                showToast("블루투스를 연결하였습니다.");
                 // Do work to manage the connection (in a separate thread)
                 manageConnectedSocket(socket);
                 try {

@@ -55,7 +55,8 @@ public class BluetoothManager extends Thread {
                 handler.obtainMessage(MainActivityEvent.RECEIVE.getStatus(), message)
                         .sendToTarget();
             } catch (IOException e) {
-                showToast("블루투스 소켓이 끊어졌습니다.");
+                handler.obtainMessage(MainActivityEvent.CLOSE_CONNECTION.getStatus())
+                        .sendToTarget();
                 break;
             }
         }

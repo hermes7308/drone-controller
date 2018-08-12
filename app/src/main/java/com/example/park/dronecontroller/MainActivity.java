@@ -40,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String SEND_PREFIX = "[전송] : ";
     public static final String RECEIVE_PREFIX = "[수신] : ";
+    public static final String CLOSE_CONNECTION_MESSAGE = "블루투스 연결이 종료 되었습니다.";
+    public static final String CONNECT_MESSAGE = "블루투스를 연결하였습니다.";
+
     /* 블루투스 활성화 값 */
     private static final int REQUEST_ENABLE_BT = 1;
     /* 블루투스 서버 활성화 값 */
@@ -189,6 +192,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void connect(BluetoothManager bluetoothManager) {
+        printMessage(CONNECT_MESSAGE);
+        Toast.makeText(getApplicationContext(), CONNECT_MESSAGE, Toast.LENGTH_SHORT).show();
+
+        this.bluetoothManager = bluetoothManager;
+    }
+
+    public void closeConnection() {
+        printMessage(CLOSE_CONNECTION_MESSAGE);
+        Toast.makeText(getApplicationContext(), CLOSE_CONNECTION_MESSAGE, Toast.LENGTH_SHORT).show();
+
+        if (bluetoothManager == null) {
+            return;
+        }
+
+        if (bluetoothManager.isConnected()) {
+            bluetoothManager.cancel();
+        }
+    }
 
     private void send(String from, int angle, int power, int direction) {
         JoystickItem item = new JoystickItem(from, angle, power, direction);
@@ -198,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void send(String message) {
-        BluetoothManager bluetoothManager = getBluetoothManager();
         if (bluetoothManager == null || !bluetoothManager.isConnected()) {
             printMessage("블루투스 연결되지 않은 상태입니다.");
             return;
@@ -349,14 +370,6 @@ public class MainActivity extends AppCompatActivity {
                 logListView.setSelection(logArrayAdapter.getCount() - 1);
             }
         });
-    }
-
-    public void setBluetoothManager(BluetoothManager bluetoothManager) {
-        this.bluetoothManager = bluetoothManager;
-    }
-
-    public BluetoothManager getBluetoothManager() {
-        return bluetoothManager;
     }
 
     public Handler getHandler() {

@@ -21,7 +21,7 @@ public class BluetoothListViewAdapter extends BaseAdapter {
     private BluetoothConnector bluetoothConnector;
 
     public BluetoothListViewAdapter(MainActivity activity) {
-        this.activity = (MainActivity) activity;
+        this.activity = activity;
     }
 
     public void addBluetooth(BluetoothDevice bluetoothDevice) {

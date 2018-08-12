@@ -22,15 +22,13 @@ public enum MainActivityEvent {
     SHOW_SHORT_TOAST(0) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            String message = (String) msg.obj;
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, (String) msg.obj, Toast.LENGTH_SHORT).show();
         }
     },
     SHOW_LONG_TOAST(1) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            String message = (String) msg.obj;
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, (String) msg.obj, Toast.LENGTH_LONG).show();
         }
     },
     CANCEL_BLUETOOTH_DIALOG(2) {
@@ -42,22 +40,25 @@ public enum MainActivityEvent {
     CONNECT(100) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            activity.printMessage("블루투스를 연결하였습니다.");
-            activity.setBluetoothManager((BluetoothManager) msg.obj);
+            activity.connect((BluetoothManager) msg.obj);
+        }
+    },
+    CLOSE_CONNECTION(101) {
+        @Override
+        public void execute(MainActivity activity, Context context, Message msg) {
+            activity.closeConnection();
         }
     },
     SEND(300) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            String message = (String) msg.obj;
-            activity.send(message);
+            activity.send((String) msg.obj);
         }
     },
     RECEIVE(301) {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
-            String message = (String) msg.obj;
-            activity.receive(message);
+            activity.receive((String) msg.obj);
         }
     };
 
