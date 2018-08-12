@@ -38,6 +38,8 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     private final String TAG = getClass().getSimpleName();
 
+    public static final String SEND_PREFIX = "send : ";
+    public static final String RECEIVE_PREFIX = "receive : ";
     /* 블루투스 활성화 값 */
     private static final int REQUEST_ENABLE_BT = 1;
     /* 블루투스 서버 활성화 값 */
@@ -202,8 +204,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        printMessage(message);
+        printMessage(SEND_PREFIX + message);
         bluetoothManager.write(message);
+    }
+
+    public void receive(String message) {
+        printMessage(RECEIVE_PREFIX + message);
     }
 
     private void runServer() {

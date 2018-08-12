@@ -23,7 +23,6 @@ public enum MainActivityEvent {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
             String message = (String) msg.obj;
-
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
         }
     },
@@ -31,7 +30,6 @@ public enum MainActivityEvent {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
             String message = (String) msg.obj;
-
             Toast.makeText(context, message, Toast.LENGTH_LONG).show();
         }
     },
@@ -52,9 +50,14 @@ public enum MainActivityEvent {
         @Override
         public void execute(MainActivity activity, Context context, Message msg) {
             String message = (String) msg.obj;
-
-            activity.printMessage(message);
             activity.send(message);
+        }
+    },
+    RECEIVE(301) {
+        @Override
+        public void execute(MainActivity activity, Context context, Message msg) {
+            String message = (String) msg.obj;
+            activity.receive(message);
         }
     };
 
