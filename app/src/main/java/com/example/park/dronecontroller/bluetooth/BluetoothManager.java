@@ -8,9 +8,12 @@ import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 public class BluetoothManager extends Thread {
     private final String TAG = getClass().getSimpleName();
+
+    public static final UUID BT_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private final BluetoothSocket mmSocket;
     private final InputStream mmInStream;

@@ -14,7 +14,7 @@ import java.util.UUID;
 public class BluetoothConnector extends Thread {
     private final String TAG = getClass().getSimpleName();
 
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final UUID MY_UUID = BluetoothManager.BT_UUID;
 
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
