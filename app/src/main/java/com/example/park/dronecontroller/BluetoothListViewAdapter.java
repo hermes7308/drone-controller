@@ -1,6 +1,5 @@
 package com.example.park.dronecontroller;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -21,7 +20,7 @@ public class BluetoothListViewAdapter extends BaseAdapter {
 
     private BluetoothConnector bluetoothConnector;
 
-    public BluetoothListViewAdapter(Activity activity) {
+    public BluetoothListViewAdapter(MainActivity activity) {
         this.activity = (MainActivity) activity;
     }
 
@@ -95,7 +94,7 @@ public class BluetoothListViewAdapter extends BaseAdapter {
             bluetoothConnector.cancel();
         }
 
-        bluetoothConnector = new BluetoothConnector(activity, device);
+        bluetoothConnector = new BluetoothConnector(activity.getHandler(), device);
         bluetoothConnector.start();
     }
 

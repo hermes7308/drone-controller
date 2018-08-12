@@ -18,11 +18,12 @@ public class EventHandler extends Handler {
 
     @Override
     public void handleMessage(Message msg) {
-        /* 로그 내용 추가 */
-        activity.printMessage((String) msg.obj);
-
         /* 해당 이벤트 실행 */
-        MainActivityEvent.getEventStatus(msg.what)
-                .execute(activity, context, msg);
+        MainActivityEvent event = MainActivityEvent.getEventStatus(msg.what);
+        if (event == null) {
+            throw new IllegalArgumentException("이벤트를 찾을 수 없습니다. status no : " + msg.what);
+        }
+
+        event.execute(activity, context, msg);
     }
 }

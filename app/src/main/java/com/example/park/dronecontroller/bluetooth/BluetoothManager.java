@@ -18,7 +18,7 @@ public class BluetoothManager extends Thread {
 
     private Handler handler;
 
-    public BluetoothManager(BluetoothSocket socket, Handler handler) {
+    public BluetoothManager(Handler handler, BluetoothSocket socket) {
         this.handler = handler;
 
         mmSocket = socket;
@@ -49,7 +49,7 @@ public class BluetoothManager extends Thread {
                 String message = new String(buffer, 0, bytes);
 
                 // Send the obtained bytes to the UI activity
-                handler.obtainMessage(MainActivityEvent.NONE_FOR_LOG.getStatus(), message)
+                handler.obtainMessage(MainActivityEvent.PRINT_MESSAGE.getStatus(), message)
                         .sendToTarget();
             } catch (IOException e) {
                 showToast("블루투스 소켓이 끊어졌습니다.");

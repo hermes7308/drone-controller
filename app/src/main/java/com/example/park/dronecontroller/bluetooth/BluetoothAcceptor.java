@@ -1,12 +1,10 @@
 package com.example.park.dronecontroller.bluetooth;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 
-import com.example.park.dronecontroller.MainActivity;
 import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 
 import java.io.IOException;
@@ -20,13 +18,10 @@ public class BluetoothAcceptor extends Thread {
 
     private final BluetoothServerSocket mmServerSocket;
 
-    private MainActivity activity;
     private Handler handler;
-    private BluetoothManager bluetoothManager;
 
-    public BluetoothAcceptor(Activity activity) {
-        this.activity = (MainActivity) activity;
-        this.handler = this.activity.getHandler();
+    public BluetoothAcceptor(Handler handler) {
+        this.handler = handler;
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -79,10 +74,11 @@ public class BluetoothAcceptor extends Thread {
     }
 
     private void manageConnectedSocket(BluetoothSocket bluetoothSocket) {
-        bluetoothManager = new BluetoothManager(bluetoothSocket, activity.getHandler());
+        BluetoothManager bluetoothManager = new BluetoothManager(handler, bluetoothSocket);
         bluetoothManager.start();
 
-        activity.setBluetoothManager(bluetoothManager);
+        handler.obtainMessage(MainActivityEvent.CONNECT.getStatus(), bluetoothManager)
+                .sendToTarget();
     }
 
     private void showToast(String message) {

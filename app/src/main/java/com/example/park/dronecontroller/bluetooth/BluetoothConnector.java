@@ -1,13 +1,11 @@
 package com.example.park.dronecontroller.bluetooth;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
 import android.util.Log;
 
-import com.example.park.dronecontroller.MainActivity;
 import com.example.park.dronecontroller.handler.event.MainActivityEvent;
 
 import java.io.IOException;
@@ -21,13 +19,11 @@ public class BluetoothConnector extends Thread {
     private final BluetoothSocket mmSocket;
     private final BluetoothDevice mmDevice;
 
-    private MainActivity activity;
     private Handler handler;
     private BluetoothManager bluetoothManager;
 
-    public BluetoothConnector(Activity activity, BluetoothDevice device) {
-        this.activity = (MainActivity) activity;
-        this.handler = this.activity.getHandler();
+    public BluetoothConnector(Handler handler, BluetoothDevice device) {
+        this.handler = handler;
 
         // Use a temporary object that is later assigned to mmSocket,
         // because mmSocket is final
@@ -63,13 +59,13 @@ public class BluetoothConnector extends Thread {
             }
             return;
         }
-        // 블루투스 검색 다이얼로그 종료
-        activity.cancelSearchBluetoothDialog();
 
-        handler.obtainMessage(MainActivityEvent.CANCEL_BLUETOOTH_DIALOG.getStatus(), "블루투스를 연결하였습니다.")
-                .sendToTarget();
         // Do work to manage the connection (in a separate thread)
         manageConnectedSocket(mmSocket);
+
+        // 블루투스 검색 다이얼로그 종료
+        handler.obtainMessage(MainActivityEvent.CANCEL_BLUETOOTH_DIALOG.getStatus())
+                .sendToTarget();
     }
 
     /**
@@ -83,10 +79,11 @@ public class BluetoothConnector extends Thread {
     }
 
     private void manageConnectedSocket(BluetoothSocket bluetoothSocket) {
-        bluetoothManager = new BluetoothManager(bluetoothSocket, activity.getHandler());
+        bluetoothManager = new BluetoothManager(handler, bluetoothSocket);
         bluetoothManager.start();
 
-        activity.setBluetoothManager(bluetoothManager);
+        handler.obtainMessage(MainActivityEvent.CONNECT.getStatus(), bluetoothManager)
+                .sendToTarget();
     }
 
     private void showToast(String message) {

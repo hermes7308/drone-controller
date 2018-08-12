@@ -197,14 +197,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void send(String message) {
         BluetoothManager bluetoothManager = getBluetoothManager();
-        if (bluetoothManager == null) {
+        if (bluetoothManager == null || !bluetoothManager.isConnected()) {
+            printMessage("블루투스 연결되지 않은 상태입니다.");
             return;
         }
 
-        if (!bluetoothManager.isConnected()) {
-            return;
-        }
-
+        printMessage(message);
         bluetoothManager.write(message);
     }
 
@@ -213,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             bluetoothAcceptor.cancel();
         }
 
-        bluetoothAcceptor = new BluetoothAcceptor(this);
+        bluetoothAcceptor = new BluetoothAcceptor(handler);
         bluetoothAcceptor.start();
     }
 
@@ -345,14 +343,6 @@ public class MainActivity extends AppCompatActivity {
                 logListView.setSelection(logArrayAdapter.getCount() - 1);
             }
         });
-    }
-
-    public BluetoothAcceptor getBluetoothAcceptor() {
-        return bluetoothAcceptor;
-    }
-
-    public void setBluetoothAcceptor(BluetoothAcceptor bluetoothAcceptor) {
-        this.bluetoothAcceptor = bluetoothAcceptor;
     }
 
     public void setBluetoothManager(BluetoothManager bluetoothManager) {
