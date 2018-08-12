@@ -5,4 +5,6 @@
     <string name="string_run_bluetooth_server">블루투스 서버 실행</string>
     <string name="string_cancel">Cancel</string>
     <string name="string_permission_failure">권한 요청 실패</string>
+    <string name="string_send_button">전송</string>
+    <string name="string_send_edittext">입력</string>
 </resources>
