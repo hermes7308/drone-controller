@@ -193,15 +193,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void connect(BluetoothManager bluetoothManager) {
+        /* 로그 화면 */
         printMessage(CONNECT_MESSAGE);
         Toast.makeText(getApplicationContext(), CONNECT_MESSAGE, Toast.LENGTH_SHORT).show();
+        /* 블루투스 버튼 바꾸기 */
+        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_connected);
 
         this.bluetoothManager = bluetoothManager;
     }
 
     public void closeConnection() {
+        /* 로그 화면 */
         printMessage(CLOSE_CONNECTION_MESSAGE);
         Toast.makeText(getApplicationContext(), CLOSE_CONNECTION_MESSAGE, Toast.LENGTH_SHORT).show();
+        /* 블루투스 버튼 바꾸기 */
+        if (bluetoothAdapter.isEnabled()) {
+            enableBluetoothEvent();
+        } else {
+            disableBluetoothEvent();
+        }
 
         if (bluetoothManager == null) {
             return;
@@ -312,21 +322,29 @@ public class MainActivity extends AppCompatActivity {
                 switch (status) {
                     case BluetoothAdapter.STATE_TURNING_OFF:
                     case BluetoothAdapter.STATE_OFF:
-                        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_disable);
-                        bluetoothSearchMenuItem.setVisible(false);
-                        bluetoothRunServerMenuItem.setVisible(false);
+                        disableBluetoothEvent();
                         break;
                     case BluetoothAdapter.STATE_TURNING_ON:
                     case BluetoothAdapter.STATE_ON:
-                        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_enable);
-                        bluetoothSearchMenuItem.setVisible(true);
-                        bluetoothRunServerMenuItem.setVisible(true);
+                        enableBluetoothEvent();
                         break;
                 }
 
             }
         }
     };
+
+    private void enableBluetoothEvent() {
+        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_enable);
+        bluetoothSearchMenuItem.setVisible(true);
+        bluetoothRunServerMenuItem.setVisible(true);
+    }
+
+    private void disableBluetoothEvent() {
+        bluetoothStatusMenuItem.setIcon(R.mipmap.bluetooth_disable);
+        bluetoothSearchMenuItem.setVisible(false);
+        bluetoothRunServerMenuItem.setVisible(false);
+    }
 
     private PermissionListener permissionListener = new PermissionListener() {
         @Override
